@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth, signIn } from "@/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { AuthError } from "next-auth";
 
@@ -33,18 +34,7 @@ export async function loginUser(
   const password = String(formData.get("password") ?? "");
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return { error: "Invalid email or password." };
-    }
-
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return { error: "Invalid email or password." };
-    }
-
-    const redirectTo = user.role === "ADMIN" ? "/admin" : "/dashboard";
-    await signIn("credentials", { email, password, redirectTo });
+    await signIn("credentials", { email, password, redirectTo: "/" });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Invalid email or password." };
