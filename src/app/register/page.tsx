@@ -1,11 +1,63 @@
+"use client";
+
 import Link from "next/link";
-import { registerUser } from "@/lib/actions";
-import { SubmitButton } from "@/components/SubmitButton";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
-import { ActionForm } from "@/components/ActionForm";
 
 export default function RegisterPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setIsLoading(true);
+    setError(null);
+
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const password = String(formData.get("password") ?? "");
+
+    if (!name || !email || password.length < 8) {
+      setError("Name, email, and a password of at least 8 characters are required.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Registration failed.");
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      setIsLoading(false);
+
+      if (result?.error) {
+        setError("Registration successful but login failed. Please try logging in.");
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6">
       <Logo
@@ -25,7 +77,15 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <ActionForm action={registerUser} className="space-y-4">
+        <form action={handleSubmit} className="space-y-4">
+          {error && (
+            <p
+              role="alert"
+              className="rounded-md border border-debit/30 bg-debit/5 px-3 py-2 text-sm text-debit"
+            >
+              {error}
+            </p>
+          )}
           <TextField label="Full name" type="text" name="name" required />
           <TextField label="Email" type="email" name="email" required />
           <TextField
@@ -36,8 +96,14 @@ export default function RegisterPage() {
             minLength={8}
             hint="At least 8 characters."
           />
-          <SubmitButton className="w-full">Create account</SubmitButton>
-        </ActionForm>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full rounded-md bg-brass px-4 py-2 font-medium text-paper transition-colors hover:bg-brass/90 disabled:opacity-50"
+          >
+            {isLoading ? "Creating account..." : "Create account"}
+          </button>
+        </form>
 
         <p className="mt-6 text-center text-sm text-stone">
           Already have an account?{" "}

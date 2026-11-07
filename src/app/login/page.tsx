@@ -1,11 +1,37 @@
+"use client";
+
 import Link from "next/link";
-import { loginUser } from "@/lib/actions";
-import { SubmitButton } from "@/components/SubmitButton";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
-import { ActionForm } from "@/components/ActionForm";
 
 export default function LoginPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setIsLoading(true);
+    setError(null);
+
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const password = String(formData.get("password") ?? "");
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    setIsLoading(false);
+
+    if (result?.error) {
+      setError("Invalid email or password.");
+    } else {
+      window.location.href = "/dashboard";
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6">
       <Logo
@@ -24,7 +50,15 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <ActionForm action={loginUser} className="space-y-4">
+        <form action={handleSubmit} className="space-y-4">
+          {error && (
+            <p
+              role="alert"
+              className="rounded-md border border-debit/30 bg-debit/5 px-3 py-2 text-sm text-debit"
+            >
+              {error}
+            </p>
+          )}
           <TextField label="Email" type="email" name="email" required />
           <TextField
             label="Password"
@@ -32,8 +66,14 @@ export default function LoginPage() {
             name="password"
             required
           />
-          <SubmitButton className="w-full">Sign in</SubmitButton>
-        </ActionForm>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full rounded-md bg-brass px-4 py-2 font-medium text-paper transition-colors hover:bg-brass/90 disabled:opacity-50"
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
 
         <p className="mt-6 text-center text-sm text-stone">
           No account?{" "}

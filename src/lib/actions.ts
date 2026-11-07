@@ -14,7 +14,7 @@ import { AuthError } from "next-auth";
  * user-facing validation failures are returned as data instead, via
  * useActionState — that's the only way the real message shows up in prod.
  */
-export type ActionState = { error?: string } | undefined;
+export type ActionState = { error?: string; success?: boolean } | undefined;
 
 async function requireAdmin() {
   const session = await auth();
@@ -33,14 +33,17 @@ export async function loginUser(
     .toLowerCase();
   const password = String(formData.get("password") ?? "");
 
-  try {
-    await signIn("credentials", { email, password, redirectTo: "/" });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Invalid email or password." };
-    }
-    throw error;
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    return { error: "Invalid email or password." };
   }
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    return { error: "Invalid email or password." };
+  }
+
+  return { success: true };
 }
 
 export async function registerUser(
