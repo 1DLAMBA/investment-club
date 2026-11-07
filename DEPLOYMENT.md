@@ -24,16 +24,16 @@
 5. Click **Create**
 6. Vercel will automatically set `DATABASE_URL` and `DIRECT_URL` environment variables
 
-## Step 3: Add Environment Variables
+## Step 3: Add Environment Variables (CRITICAL)
 
 1. Go to your project's **Settings → Environment Variables**
 2. Add the following variables:
 
-   **AUTH_SECRET** (required):
+   **AUTH_SECRET** (REQUIRED - Authentication will fail without this):
    ```bash
    openssl rand -base64 32
    ```
-   Generate this locally and paste the value
+   Generate this locally and paste the value. This is used by NextAuth.js to sign JWT tokens.
 
    **SEED_ADMIN_EMAIL** (optional):
    ```
@@ -51,6 +51,8 @@
    ```
 
 3. Click **Save** and then **Redeploy** to apply the variables
+
+⚠️ **IMPORTANT**: You MUST add `AUTH_SECRET` before authentication will work. Without it, you'll get a "Server Action not found" error when trying to log in.
 
 ## Step 4: Run Database Schema and Seed
 
