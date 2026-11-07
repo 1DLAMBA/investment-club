@@ -39,13 +39,16 @@ model User {
 }
 
 model Company {
-  id          String        @id @default(cuid())
-  name        String
-  description String
-  sector      String?
-  status      CompanyStatus @default(OPEN)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  name           String
+  description    String
+  sector         String?
+  status         CompanyStatus @default(OPEN)
+  currentValue   Decimal       @default(0) @db.Decimal(14, 2)
+  initialValue   Decimal       @default(0) @db.Decimal(14, 2)
+  historicalData Json          @default("[]")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   createdById String
   createdBy   User   @relation(fields: [createdById], references: [id])

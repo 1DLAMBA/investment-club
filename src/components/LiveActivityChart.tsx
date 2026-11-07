@@ -15,9 +15,22 @@ function seededWalk(base: number) {
   return points;
 }
 
-export function LiveActivityChart({ base }: { base: number }) {
+export function LiveActivityChart({
+  base,
+  historicalData,
+  currentValue,
+}: {
+  base: number;
+  historicalData?: number[];
+  currentValue?: number;
+}) {
   const safeBase = base > 0 ? base : 100;
-  const [points, setPoints] = useState(() => seededWalk(safeBase));
+  const [points, setPoints] = useState(() => {
+    if (historicalData && historicalData.length > 0) {
+      return historicalData;
+    }
+    return seededWalk(safeBase);
+  });
   const frame = useRef(0);
 
   useEffect(() => {
@@ -33,11 +46,12 @@ export function LiveActivityChart({ base }: { base: number }) {
         frame.current += 1;
         setPoints((prev) => {
           const last = prev[prev.length - 1];
+          const currentBase = currentValue && currentValue > 0 ? currentValue : safeBase;
           const next =
             last +
-            (Math.random() - 0.48) * safeBase * 0.025 +
-            Math.sin(frame.current * 0.3) * safeBase * 0.004;
-          return [...prev.slice(1), Math.max(next, safeBase * 0.4)];
+            (Math.random() - 0.48) * currentBase * 0.025 +
+            Math.sin(frame.current * 0.3) * currentBase * 0.004;
+          return [...prev.slice(1), Math.max(next, currentBase * 0.4)];
         });
       }, TICK_MS);
     };
@@ -57,7 +71,7 @@ export function LiveActivityChart({ base }: { base: number }) {
       stop();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [safeBase]);
+  }, [safeBase, currentValue]);
 
   const width = 600;
   const height = 140;
@@ -130,7 +144,9 @@ export function LiveActivityChart({ base }: { base: number }) {
         />
       </svg>
       <p className="mt-1 text-xs text-stone">
-        Illustrative activity for this company &mdash; not real market data.
+        {historicalData && historicalData.length > 0
+          ? "Company value history (fictional data)"
+          : "Illustrative activity for this company &mdash; not real market data."}
       </p>
     </div>
   );

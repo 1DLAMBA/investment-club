@@ -73,7 +73,11 @@ export default async function CompanyDetailPage({
           </div>
 
           <div className="mt-5 border-t border-ink/10 pt-5">
-            <LiveActivityChart base={activeMoney.toNumber() || 100} />
+            <LiveActivityChart
+              base={activeMoney.toNumber() || 100}
+              historicalData={company.historicalData as number[]}
+              currentValue={company.currentValue.toNumber()}
+            />
           </div>
 
           {isAdmin && allocationSlices.length > 0 && (
