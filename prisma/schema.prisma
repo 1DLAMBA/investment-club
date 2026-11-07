@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  INVESTOR
+}
+
+enum TransactionType {
+  ADMIN_CREDIT
+  INVESTMENT
+  PAYOUT
+}
+
+enum CompanyStatus {
+  OPEN
+  CLOSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(INVESTOR)
+  createdAt    DateTime @default(now())
+
+  transactions      WalletTransaction[] @relation("UserTransactions")
+  createdTransactions WalletTransaction[] @relation("AdminCreatedTransactions")
+  investments       Investment[]
+  companiesCreated  Company[]
+}
+
+model Company {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  sector      String?
+  status      CompanyStatus @default(OPEN)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  investments Investment[]
+}
+
+model Investment {
+  id        String   @id @default(cuid())
+  amount    Decimal  @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+  note      String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+}
+
+model WalletTransaction {
+  id        String          @id @default(cuid())
+  amount    Decimal         @db.Decimal(14, 2)
+  type      TransactionType
+  note      String?
+  createdAt DateTime        @default(now())
+
+  userId String
+  user   User   @relation("UserTransactions", fields: [userId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("AdminCreatedTransactions", fields: [createdById], references: [id])
+}
