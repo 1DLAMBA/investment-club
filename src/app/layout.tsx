@@ -23,6 +23,9 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Investment Club",
   description: "Internal investment tracking for the club",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export const viewport: Viewport = {
