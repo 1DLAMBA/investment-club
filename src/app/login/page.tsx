@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -21,11 +23,26 @@ export default function LoginPage() {
       // Ensure seed data exists before login
       await fetch("/api/seed", { method: "POST" });
 
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
         email,
         password,
-        callbackUrl: "/",
+        redirect: false,
       });
+
+      if (result?.error) {
+        setError("Invalid email or password.");
+        setIsLoading(false);
+      } else if (result?.ok) {
+        // Fetch session to determine role
+        const sessionRes = await fetch("/api/auth/session");
+        const session = await sessionRes.json();
+
+        if (session?.user?.role === "ADMIN") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
+      }
     } catch (err: any) {
       setError("Invalid email or password.");
       setIsLoading(false);
