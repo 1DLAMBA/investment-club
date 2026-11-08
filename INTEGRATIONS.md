@@ -25,6 +25,8 @@ This file tracks all external services, APIs, and databases integrated into the 
   ```
 - **Password**: `Alambata15!`
 
+⚠️ **SECURITY NOTE**: Never commit INTEGRATIONS.md to public repositories. This file contains credentials.
+
 ### Environment Variables Required
 - `DATABASE_URL`
 - `DIRECT_URL`
