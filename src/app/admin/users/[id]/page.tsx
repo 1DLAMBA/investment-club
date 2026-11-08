@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { creditWallet, getWalletBalance, investForUser } from "@/lib/actions";
+import {
+  creditWallet,
+  getWalletBalance,
+  investForUser,
+  updateInterestRate,
+} from "@/lib/actions";
 import { NavBar } from "@/components/NavBar";
 import { SubmitButton } from "@/components/SubmitButton";
 import { TextField, SelectField } from "@/components/Field";
@@ -44,6 +49,7 @@ export default async function UserProfilePage({
 
   const creditWalletWithId = creditWallet.bind(null, id);
   const investForUserWithId = investForUser.bind(null, id);
+  const updateInterestRateWithId = updateInterestRate.bind(null, id);
 
   const totalInvested = investments.reduce(
     (sum, inv) => sum.plus(inv.amount),
@@ -81,18 +87,25 @@ export default async function UserProfilePage({
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-3 gap-4">
             <div className="min-w-0">
-              <p className="break-words font-mono text-2xl font-medium tabular-nums text-ink sm:text-3xl">
+              <p className="break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl">
                 ${balance.toFixed(2)}
               </p>
               <p className="text-xs text-stone">Wallet balance</p>
             </div>
             <div className="min-w-0">
-              <p className="break-words font-mono text-2xl font-medium tabular-nums text-ink sm:text-3xl">
+              <p className="break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl">
                 ${totalInvested.toFixed(2)}
               </p>
               <p className="text-xs text-stone">Total invested</p>
+            </div>
+            <div className="min-w-0">
+              <p className="break-words font-mono text-xl font-medium tabular-nums text-credit sm:text-2xl">
+                {user.interestRate.gte(0) ? "+" : ""}
+                {user.interestRate.toFixed(2)}%
+              </p>
+              <p className="text-xs text-stone">Interest</p>
             </div>
           </div>
 
@@ -101,6 +114,32 @@ export default async function UserProfilePage({
               <PortfolioAllocation slices={allocationSlices} total={totalInvested} />
             </div>
           )}
+        </section>
+
+        <section>
+          <h2 className="mb-4 font-display text-lg font-medium text-paper">
+            Interest
+          </h2>
+          <p className="mb-4 text-sm text-mist">
+            Shown on {user.name}&rsquo;s own dashboard. Set it to whatever
+            you like — it isn&rsquo;t calculated from anything.
+          </p>
+          <ActionForm
+            action={updateInterestRateWithId}
+            className="flex flex-wrap items-end gap-4 rounded-lg border border-brass/15 bg-paper p-5 sm:p-6"
+          >
+            <TextField
+              label="Interest rate (%)"
+              type="number"
+              name="interestRate"
+              inputMode="decimal"
+              step="0.01"
+              mono
+              defaultValue={user.interestRate.toString()}
+              className="w-40"
+            />
+            <SubmitButton>Save</SubmitButton>
+          </ActionForm>
         </section>
 
         <section>

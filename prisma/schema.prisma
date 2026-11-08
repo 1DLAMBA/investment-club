@@ -37,6 +37,7 @@ model User {
   name         String
   role         Role     @default(INVESTOR)
   avatarUrl    String?
+  interestRate Decimal  @default(0) @db.Decimal(6, 2)
   createdAt    DateTime @default(now())
 
   transactions      WalletTransaction[] @relation("UserTransactions")

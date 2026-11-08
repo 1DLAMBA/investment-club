@@ -216,6 +216,30 @@ export async function creditWallet(
 }
 
 /**
+ * Shown on the member's own dashboard as "Interest" — an admin-set rate,
+ * not computed from anything. Can be any value, including negative.
+ */
+export async function updateInterestRate(
+  userId: string,
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const raw = String(formData.get("interestRate") ?? "");
+  const interestRate = new Prisma.Decimal(raw || "0");
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { interestRate },
+  });
+
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/dashboard");
+  return undefined;
+}
+
+/**
  * Investors tell the admin which company they want in and the admin places
  * the investment on their behalf — there is no self-serve invest button.
  */

@@ -45,15 +45,7 @@ export default async function DashboardPage() {
     new Prisma.Decimal(0),
   );
 
-  const portfolioCurrentValue = investments.reduce(
-    (sum, inv) => sum.plus(currentValueOf(inv.amount, inv.company)),
-    new Prisma.Decimal(0),
-  );
-  const totalGain = portfolioCurrentValue.minus(totalInvested);
-  const totalGainPct = totalInvested.gt(0)
-    ? totalGain.div(totalInvested).times(100)
-    : new Prisma.Decimal(0);
-  const isUp = totalGain.gte(0);
+  const interestRate = user?.interestRate ?? new Prisma.Decimal(0);
 
   const allocationSlices = Object.values(
     investments.reduce<Record<string, { id: string; label: string; amount: Prisma.Decimal }>>(
@@ -91,50 +83,28 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-stone">
                 Wallet balance
               </p>
-              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl lg:text-3xl">
+              <p className="mt-2 break-words font-mono text-2xl font-medium tabular-nums text-ink sm:text-3xl">
                 ${balance.toFixed(2)}
               </p>
             </div>
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-stone">
-                Total invested
+                Interest
               </p>
-              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl lg:text-3xl">
-                ${totalInvested.toFixed(2)}
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-stone">
-                Portfolio value
-              </p>
-              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl lg:text-3xl">
-                ${portfolioCurrentValue.toFixed(2)}
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-stone">
-                Total return
-              </p>
-              <p
-                className={`mt-2 break-words font-mono text-xl font-medium tabular-nums sm:text-2xl lg:text-3xl ${
-                  isUp ? "text-credit" : "text-debit"
-                }`}
-              >
-                {isUp ? "+" : ""}
-                {totalGainPct.toFixed(1)}%
+              <p className="mt-2 break-words font-mono text-2xl font-medium tabular-nums text-credit sm:text-3xl">
+                {interestRate.gte(0) ? "+" : ""}
+                {interestRate.toFixed(2)}%
               </p>
             </div>
           </div>
           <p className="mt-3 text-xs text-stone">
             Balances are set by an admin after funds are received outside the
-            platform. Portfolio value tracks each company&rsquo;s active
-            money relative to what it started at &mdash; illustrative, not a
-            real market feed.
+            platform.
           </p>
 
           {allocationSlices.length > 0 && (
