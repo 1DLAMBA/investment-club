@@ -17,11 +17,11 @@ This file tracks all external services, APIs, and databases integrated into the 
 ### Connection Strings
 - **Transaction mode** (for Vercel/serverless):
   ```
-  postgresql://postgres.obpkvdbqxxdnqxkxeyfa:Alambata15!@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+  postgresql://postgres.obpkvdbqxxdnqxkxeyfa:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
   ```
 - **Direct connection** (for local dev/migrations):
   ```
-  postgresql://postgres.obpkvdbqxxdnqxkxeyfa:Alambata15!@db.obpkvdbqxxdnqxkxeyfa.supabase.co:5432/postgres
+  postgresql://postgres.obpkvdbqxxdnqxkxeyfa:[PASSWORD]@db.obpkvdbqxxdnqxkxeyfa.supabase.co:5432/postgres
   ```
 - **Password**: `Alambata15!`
 
