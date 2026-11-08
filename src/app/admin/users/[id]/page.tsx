@@ -10,6 +10,8 @@ import { LedgerList } from "@/components/LedgerList";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
 import { Avatar } from "@/components/Avatar";
 import { ActionForm } from "@/components/ActionForm";
+import { BackButton } from "@/components/BackButton";
+import { DeleteUserButton } from "@/components/DeleteUserButton";
 
 export default async function UserProfilePage({
   params,
@@ -67,9 +69,10 @@ export default async function UserProfilePage({
     <div className="min-h-screen">
       <NavBar name={session!.user.name ?? ""} role="ADMIN" />
       <main className="mx-auto max-w-2xl space-y-8 px-4 py-8 sm:space-y-10 sm:px-6 sm:py-10">
+        <BackButton fallbackHref="/admin" />
         <section className="rounded-lg border border-brass/15 bg-paper p-5 sm:p-6">
           <div className="flex items-center gap-3">
-            <Avatar name={user.name} />
+            <Avatar name={user.name} avatarUrl={user.avatarUrl} />
             <div className="min-w-0">
               <h1 className="truncate font-display text-lg font-medium text-ink">
                 {user.name}
@@ -79,14 +82,14 @@ export default async function UserProfilePage({
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <div>
-              <p className="font-mono text-3xl font-medium tabular-nums text-ink sm:text-4xl">
+            <div className="min-w-0">
+              <p className="break-words font-mono text-2xl font-medium tabular-nums text-ink sm:text-3xl">
                 ${balance.toFixed(2)}
               </p>
               <p className="text-xs text-stone">Wallet balance</p>
             </div>
-            <div>
-              <p className="font-mono text-3xl font-medium tabular-nums text-ink sm:text-4xl">
+            <div className="min-w-0">
+              <p className="break-words font-mono text-2xl font-medium tabular-nums text-ink sm:text-3xl">
                 ${totalInvested.toFixed(2)}
               </p>
               <p className="text-xs text-stone">Total invested</p>
@@ -203,6 +206,19 @@ export default async function UserProfilePage({
             }))}
           />
         </section>
+
+        {user.role === "INVESTOR" && (
+          <section className="rounded-lg border border-debit/30 bg-paper p-5 sm:p-6">
+            <h2 className="mb-1 font-display text-lg font-medium text-debit">
+              Danger zone
+            </h2>
+            <p className="mb-4 text-sm text-stone">
+              Deletes {user.name}&rsquo;s account, wallet history, and
+              investments for good. There&rsquo;s no undo.
+            </p>
+            <DeleteUserButton userId={user.id} userName={user.name} />
+          </section>
+        )}
       </main>
     </div>
   );

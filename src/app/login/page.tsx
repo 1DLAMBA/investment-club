@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
+import { Spinner } from "@/components/Spinner";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +19,6 @@ export default function LoginPage() {
     const password = String(formData.get("password") ?? "");
 
     try {
-      // Ensure seed data exists before login
-      await fetch("/api/seed", { method: "POST" });
-
       const result = await signIn("credentials", {
         email,
         password,
@@ -34,6 +32,8 @@ export default function LoginPage() {
         // Redirect to "/" so the middleware can route by role (admin vs
         // investor) — going straight to "/dashboard" would land admins on
         // the investor view, since the middleware only role-routes "/".
+        // Loading stays true through this navigation on purpose — there's
+        // no "done" moment until the next page has replaced this one.
         window.location.href = "/";
       }
     } catch {
@@ -60,30 +60,37 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form action={handleSubmit} className="space-y-4">
-          {error && (
-            <p
-              role="alert"
-              className="rounded-md border border-debit/30 bg-debit/5 px-3 py-2 text-sm text-debit"
+        <fieldset
+          disabled={isLoading}
+          className="space-y-4 border-0 p-0 disabled:opacity-60"
+        >
+          <form action={handleSubmit} className="space-y-4">
+            {error && (
+              <p
+                role="alert"
+                className="rounded-md border border-debit/30 bg-debit/5 px-3 py-2 text-sm text-debit"
+              >
+                {error}
+              </p>
+            )}
+            <TextField label="Email" type="email" name="email" required />
+            <TextField
+              label="Password"
+              type="password"
+              name="password"
+              required
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              aria-busy={isLoading}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-brass px-4 py-2 font-medium text-paper transition-colors hover:bg-brass/90 disabled:cursor-not-allowed disabled:opacity-80"
             >
-              {error}
-            </p>
-          )}
-          <TextField label="Email" type="email" name="email" required />
-          <TextField
-            label="Password"
-            type="password"
-            name="password"
-            required
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-md bg-brass px-4 py-2 font-medium text-paper transition-colors hover:bg-brass/90 disabled:opacity-50"
-          >
-            {isLoading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+              {isLoading && <Spinner className="h-4 w-4 text-paper" />}
+              {isLoading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </fieldset>
 
         <p className="mt-6 text-center text-sm text-stone">
           No account?{" "}

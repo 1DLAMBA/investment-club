@@ -7,11 +7,25 @@ function initials(name: string) {
 
 export function Avatar({
   name,
+  avatarUrl,
   className = "h-12 w-12 text-base",
 }: {
   name: string;
+  avatarUrl?: string | null;
   className?: string;
 }) {
+  if (avatarUrl) {
+    // Plain <img>, not next/image: these are data: URLs (client-resized
+    // uploads), which next/image's optimizer doesn't accept.
+    return (
+      <img
+        src={avatarUrl}
+        alt={`${name}'s profile picture`}
+        className={`shrink-0 rounded-full border border-brass/30 object-cover ${className}`}
+      />
+    );
+  }
+
   return (
     <span
       role="img"

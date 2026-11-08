@@ -132,13 +132,21 @@ export async function ensureSeedData() {
       console.log(`Created admin user: ${SEED_ADMIN_EMAIL}`);
     }
 
-    // Seed companies
+    // Seed companies — one query to see what already exists, rather than
+    // one round-trip per company (that took 14s+ against a pooled
+    // connection and this used to run on every login).
+    const existingNames = new Set(
+      (
+        await prisma.company.findMany({
+          where: { name: { in: SEED_COMPANIES.map((c) => c.name) } },
+          select: { name: true },
+        })
+      ).map((c) => c.name),
+    );
+
     let created = 0;
     for (const company of SEED_COMPANIES) {
-      const existing = await prisma.company.findFirst({
-        where: { name: company.name },
-      });
-      if (existing) continue;
+      if (existingNames.has(company.name)) continue;
 
       const historicalData = generateHistoricalData(
         company.initialValue,

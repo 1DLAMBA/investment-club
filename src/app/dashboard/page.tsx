@@ -6,13 +6,23 @@ import { getWalletBalance } from "@/lib/actions";
 import { NavBar } from "@/components/NavBar";
 import { LedgerList } from "@/components/LedgerList";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
-import { Avatar } from "@/components/Avatar";
+import { AvatarUpload } from "@/components/AvatarUpload";
+
+function currentValueOf(investedAmount: Prisma.Decimal, company: {
+  initialValue: Prisma.Decimal;
+  currentValue: Prisma.Decimal;
+}) {
+  if (company.initialValue.lessThanOrEqualTo(0)) return investedAmount;
+  const growth = company.currentValue.div(company.initialValue);
+  return investedAmount.times(growth);
+}
 
 export default async function DashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [balance, companies, transactions, investments] = await Promise.all([
+  const [user, balance, companies, transactions, investments] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId } }),
     getWalletBalance(userId),
     prisma.company.findMany({
       where: { status: "OPEN" },
@@ -30,22 +40,20 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const activeMoneyByCompany = await prisma.investment.groupBy({
-    by: ["companyId"],
-    where: { companyId: { in: companies.map((c) => c.id) } },
-    _sum: { amount: true },
-  });
-  const activeMoney = new Map(
-    activeMoneyByCompany.map((row) => [
-      row.companyId,
-      row._sum.amount ?? new Prisma.Decimal(0),
-    ]),
-  );
-
   const totalInvested = investments.reduce(
     (sum, inv) => sum.plus(inv.amount),
     new Prisma.Decimal(0),
   );
+
+  const portfolioCurrentValue = investments.reduce(
+    (sum, inv) => sum.plus(currentValueOf(inv.amount, inv.company)),
+    new Prisma.Decimal(0),
+  );
+  const totalGain = portfolioCurrentValue.minus(totalInvested);
+  const totalGainPct = totalInvested.gt(0)
+    ? totalGain.div(totalInvested).times(100)
+    : new Prisma.Decimal(0);
+  const isUp = totalGain.gte(0);
 
   const allocationSlices = Object.values(
     investments.reduce<Record<string, { id: string; label: string; amount: Prisma.Decimal }>>(
@@ -68,36 +76,65 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:space-y-10 sm:px-6 sm:py-10">
         <h1 className="sr-only">Dashboard</h1>
         <section className="rounded-lg border border-brass/15 bg-paper p-5 sm:p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <Avatar name={session!.user.name ?? "?"} />
-            <div className="min-w-0">
-              <p className="truncate font-display text-base font-medium text-ink">
-                {session!.user.name}
-              </p>
-              <p className="text-xs text-stone">Investment account</p>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <AvatarUpload
+                name={session!.user.name ?? "?"}
+                avatarUrl={user?.avatarUrl}
+              />
+              <div className="min-w-0">
+                <p className="truncate font-display text-base font-medium text-ink">
+                  {session!.user.name}
+                </p>
+                <p className="text-xs text-stone">Investment account</p>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-stone">
                 Wallet balance
               </p>
-              <p className="mt-2 font-mono text-3xl font-medium tabular-nums text-ink sm:text-4xl">
+              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl lg:text-3xl">
                 ${balance.toFixed(2)}
               </p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-stone">
                 Total invested
               </p>
-              <p className="mt-2 font-mono text-3xl font-medium tabular-nums text-ink sm:text-4xl">
+              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl lg:text-3xl">
                 ${totalInvested.toFixed(2)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-stone">
+                Portfolio value
+              </p>
+              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl lg:text-3xl">
+                ${portfolioCurrentValue.toFixed(2)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-stone">
+                Total return
+              </p>
+              <p
+                className={`mt-2 break-words font-mono text-xl font-medium tabular-nums sm:text-2xl lg:text-3xl ${
+                  isUp ? "text-credit" : "text-debit"
+                }`}
+              >
+                {isUp ? "+" : ""}
+                {totalGainPct.toFixed(1)}%
               </p>
             </div>
           </div>
           <p className="mt-3 text-xs text-stone">
             Balances are set by an admin after funds are received outside the
-            platform.
+            platform. Portfolio value tracks each company&rsquo;s active
+            money relative to what it started at &mdash; illustrative, not a
+            real market feed.
           </p>
 
           {allocationSlices.length > 0 && (
@@ -107,13 +144,57 @@ export default async function DashboardPage() {
           )}
         </section>
 
+        {investments.length > 0 && (
+          <section>
+            <h2 className="mb-4 font-display text-lg font-medium text-paper">
+              Investment holdings
+            </h2>
+            <ul className="divide-y divide-ink/10 rounded-lg border border-brass/15 bg-paper">
+              {investments.map((inv) => {
+                const current = currentValueOf(inv.amount, inv.company);
+                const gain = current.minus(inv.amount);
+                const gainPct = inv.amount.gt(0)
+                  ? gain.div(inv.amount).times(100)
+                  : new Prisma.Decimal(0);
+                const up = gain.gte(0);
+                return (
+                  <li key={inv.id} className="p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <Link
+                        href={`/companies/${inv.companyId}`}
+                        className="truncate font-medium text-ink hover:underline"
+                      >
+                        {inv.company.name}
+                      </Link>
+                      <span className="shrink-0 break-words font-mono font-tabular text-sm font-medium text-ink">
+                        ${current.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-stone">
+                      <span>Invested: ${inv.amount.toFixed(2)}</span>
+                      <span className={up ? "text-credit" : "text-debit"}>
+                        {up ? "+" : ""}
+                        ${gain.toFixed(2)} ({up ? "+" : ""}
+                        {gainPct.toFixed(1)}%)
+                      </span>
+                      <span className="text-right">
+                        {inv.createdAt.toLocaleDateString()}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         <section>
           <h2 className="mb-4 font-display text-lg font-medium text-paper">
             Open companies
           </h2>
           <p className="mb-4 text-sm text-mist">
-            Browse what&rsquo;s open, then tell an admin which one and how
-            much &mdash; they&rsquo;ll place the investment for you.
+            Browse what&rsquo;s open, then request to invest on a
+            company&rsquo;s page &mdash; an admin reviews and places it.
           </p>
           {companies.length === 0 ? (
             <p className="rounded-md border border-dashed border-brass/20 bg-paper px-4 py-6 text-center text-sm text-stone">
@@ -138,33 +219,18 @@ export default async function DashboardPage() {
                   <p className="mt-3 flex-1 text-sm text-ink/80">
                     {company.description}
                   </p>
-                  <div className="mt-4 flex items-baseline justify-between border-t border-ink/10 pt-3">
-                    <span className="text-xs uppercase tracking-wide text-stone">
+                  <div className="mt-4 flex items-baseline justify-between gap-2 border-t border-ink/10 pt-3">
+                    <span className="shrink-0 text-xs uppercase tracking-wide text-stone">
                       Active money
                     </span>
-                    <span className="font-mono font-tabular text-sm font-medium text-ink">
-                      ${(activeMoney.get(company.id) ?? new Prisma.Decimal(0)).toFixed(2)}
+                    <span className="min-w-0 break-words text-right font-mono font-tabular text-sm font-medium text-ink">
+                      ${company.currentValue.toFixed(2)}
                     </span>
                   </div>
                 </Link>
               ))}
             </div>
           )}
-        </section>
-
-        <section>
-          <h2 className="mb-4 font-display text-lg font-medium text-paper">
-            Your investments
-          </h2>
-          <LedgerList
-            emptyLabel="No investments yet."
-            rows={investments.map((inv) => ({
-              id: inv.id,
-              primary: inv.company.name,
-              amount: inv.amount,
-              date: inv.createdAt,
-            }))}
-          />
         </section>
 
         <section>

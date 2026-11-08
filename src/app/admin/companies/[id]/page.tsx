@@ -10,6 +10,7 @@ import { LedgerList } from "@/components/LedgerList";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
 import { LiveActivityChart } from "@/components/LiveActivityChart";
 import { ActionForm } from "@/components/ActionForm";
+import { BackButton } from "@/components/BackButton";
 
 export default async function EditCompanyPage({
   params,
@@ -30,7 +31,7 @@ export default async function EditCompanyPage({
 
   const updateCompanyWithId = updateCompany.bind(null, company.id);
 
-  const activeMoney = company.investments.reduce(
+  const memberInvestments = company.investments.reduce(
     (sum, inv) => sum.plus(inv.amount),
     new Prisma.Decimal(0),
   );
@@ -53,26 +54,44 @@ export default async function EditCompanyPage({
     <div className="min-h-screen">
       <NavBar name={session!.user.name ?? ""} role="ADMIN" />
       <main className="mx-auto max-w-2xl space-y-8 px-4 py-8 sm:space-y-10 sm:px-6 sm:py-10">
+        <BackButton fallbackHref="/admin" />
         <section className="rounded-lg border border-brass/15 bg-paper p-5 sm:p-6">
-          <p className="text-xs font-medium uppercase tracking-wide text-stone">
-            Active money
-          </p>
-          <p className="mt-2 font-mono text-3xl font-medium tabular-nums text-ink sm:text-4xl">
-            ${activeMoney.toFixed(2)}
-          </p>
-          <p className="mt-2 text-xs text-stone">
-            Total currently invested in {company.name} across all members.
+          <div className="grid grid-cols-2 gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-stone">
+                Active money
+              </p>
+              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl">
+                ${company.currentValue.toFixed(2)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-stone">
+                Member investments
+              </p>
+              <p className="mt-2 break-words font-mono text-xl font-medium tabular-nums text-ink sm:text-2xl">
+                ${memberInvestments.toFixed(2)}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-stone">
+            Active money is editable below and drives the live activity
+            chart. Member investments is the real sum members have put in.
           </p>
 
           <div className="mt-6 border-t border-ink/10 pt-5">
-            <LiveActivityChart base={activeMoney.toNumber() || 100} />
+            <LiveActivityChart
+              base={company.currentValue.toNumber() || 100}
+              historicalData={company.historicalData as number[]}
+              currentValue={company.currentValue.toNumber()}
+            />
           </div>
 
           {allocationSlices.length > 0 && (
             <div className="mt-6 border-t border-ink/10 pt-5">
               <PortfolioAllocation
                 slices={allocationSlices}
-                total={activeMoney}
+                total={memberInvestments}
                 heading="Allocation by member"
                 unitNoun="member"
                 unitNounPlural="members"
@@ -109,6 +128,17 @@ export default async function EditCompanyPage({
               defaultValue={company.description}
               required
               rows={3}
+            />
+            <TextField
+              label="Active money"
+              type="number"
+              name="currentValue"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              mono
+              defaultValue={company.currentValue.toString()}
+              hint="Shown to members and drives the live activity chart."
             />
             <SelectField
               label="Status"

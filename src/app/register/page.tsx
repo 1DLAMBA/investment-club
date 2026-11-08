@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
+import { Spinner } from "@/components/Spinner";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
@@ -78,33 +79,40 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form action={handleSubmit} className="space-y-4">
-          {error && (
-            <p
-              role="alert"
-              className="rounded-md border border-debit/30 bg-debit/5 px-3 py-2 text-sm text-debit"
+        <fieldset
+          disabled={isLoading}
+          className="space-y-4 border-0 p-0 disabled:opacity-60"
+        >
+          <form action={handleSubmit} className="space-y-4">
+            {error && (
+              <p
+                role="alert"
+                className="rounded-md border border-debit/30 bg-debit/5 px-3 py-2 text-sm text-debit"
+              >
+                {error}
+              </p>
+            )}
+            <TextField label="Full name" type="text" name="name" required />
+            <TextField label="Email" type="email" name="email" required />
+            <TextField
+              label="Password"
+              type="password"
+              name="password"
+              required
+              minLength={8}
+              hint="At least 8 characters."
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              aria-busy={isLoading}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-brass px-4 py-2 font-medium text-paper transition-colors hover:bg-brass/90 disabled:cursor-not-allowed disabled:opacity-80"
             >
-              {error}
-            </p>
-          )}
-          <TextField label="Full name" type="text" name="name" required />
-          <TextField label="Email" type="email" name="email" required />
-          <TextField
-            label="Password"
-            type="password"
-            name="password"
-            required
-            minLength={8}
-            hint="At least 8 characters."
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-md bg-brass px-4 py-2 font-medium text-paper transition-colors hover:bg-brass/90 disabled:opacity-50"
-          >
-            {isLoading ? "Creating account..." : "Create account"}
-          </button>
-        </form>
+              {isLoading && <Spinner className="h-4 w-4 text-paper" />}
+              {isLoading ? "Creating account…" : "Create account"}
+            </button>
+          </form>
+        </fieldset>
 
         <p className="mt-6 text-center text-sm text-stone">
           Already have an account?{" "}

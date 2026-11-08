@@ -24,18 +24,27 @@ enum CompanyStatus {
   CLOSED
 }
 
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
   name         String
   role         Role     @default(INVESTOR)
+  avatarUrl    String?
   createdAt    DateTime @default(now())
 
   transactions      WalletTransaction[] @relation("UserTransactions")
   createdTransactions WalletTransaction[] @relation("AdminCreatedTransactions")
   investments       Investment[]
   companiesCreated  Company[]
+  investmentRequests        InvestmentRequest[] @relation("UserRequests")
+  resolvedInvestmentRequests InvestmentRequest[] @relation("ResolvedRequests")
 }
 
 model Company {
@@ -53,7 +62,26 @@ model Company {
   createdById String
   createdBy   User   @relation(fields: [createdById], references: [id])
 
-  investments Investment[]
+  investments        Investment[]
+  investmentRequests InvestmentRequest[]
+}
+
+model InvestmentRequest {
+  id        String        @id @default(cuid())
+  amount    Decimal       @db.Decimal(14, 2)
+  note      String?
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  resolvedAt DateTime?
+
+  userId String
+  user   User   @relation("UserRequests", fields: [userId], references: [id])
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  resolvedById String?
+  resolvedBy   User?   @relation("ResolvedRequests", fields: [resolvedById], references: [id])
 }
 
 model Investment {
