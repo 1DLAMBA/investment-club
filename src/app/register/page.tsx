@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -50,8 +48,8 @@ export default function RegisterPage() {
       if (result?.error) {
         setError("Registration succeeded but login failed. Please try logging in.");
         setIsLoading(false);
-      } else if (result?.ok) {
-        router.push("/dashboard");
+      } else {
+        window.location.href = "/dashboard";
       }
     } catch (err: any) {
       setError("An error occurred. Please try again.");

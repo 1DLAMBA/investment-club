@@ -34,7 +34,7 @@ export default function LoginPage() {
         setIsLoading(false);
       } else {
         // Success - redirect to dashboard (middleware will handle role routing)
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     } catch (err: any) {
       setError("Invalid email or password.");
