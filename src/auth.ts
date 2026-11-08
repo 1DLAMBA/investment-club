@@ -3,11 +3,14 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+// Fallback AUTH_SECRET for development
+const AUTH_SECRET = process.env.AUTH_SECRET || "dev-secret-do-not-use-in-production";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: AUTH_SECRET,
   providers: [
     Credentials({
       name: "Credentials",

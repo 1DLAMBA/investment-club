@@ -17,18 +17,25 @@ export default function LoginPage() {
     const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const password = String(formData.get("password") ?? "");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      // Ensure seed data exists before login
+      await fetch("/api/seed", { method: "POST" });
 
-    setIsLoading(false);
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Invalid email or password.");
-    } else {
-      window.location.href = "/dashboard";
+      if (result?.error) {
+        setError("Invalid email or password.");
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
