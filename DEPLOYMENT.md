@@ -24,18 +24,20 @@
 
    **DATABASE_URL** (required - Supabase Transaction mode):
    ```
-   postgresql://postgres.obpkvdbqxxdnqxkxeyfa:Alambata15!@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+   postgresql://postgres.<project-ref>:<password>@aws-0-us-east-1.pooler.supabase.com:6543/postgres
    ```
 
    **DIRECT_URL** (required - Supabase Direct connection):
    ```
-   postgresql://postgres.obpkvdbqxxdnqxkxeyfa:Alambata15!@db.obpkvdbqxxdnqxkxeyfa.supabase.co:5432/postgres
+   postgresql://postgres.<project-ref>:<password>@db.<project-ref>.supabase.co:5432/postgres
    ```
 
+   Get these from your Supabase project's **Settings → Database → Connection string**.
+   Never paste the real password into this file or any other file tracked by git.
+
    **AUTH_SECRET** (required):
-   ```
-   QEOYE+BfhiY6r3iWp3RD7J/Pr1OgPjN8c4/6g1/Gxbg=
-   ```
+   Generate your own with `openssl rand -base64 32` and paste it only into Vercel's
+   environment variables UI — never into a file in this repo.
 
    **SEED_ADMIN_EMAIL** (optional):
    ```

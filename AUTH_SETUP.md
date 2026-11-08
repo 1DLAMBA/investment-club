@@ -11,7 +11,8 @@ The application is not working because `AUTH_SECRET` is missing in Vercel produc
 3. Click **Add New**
 4. Fill in:
    - **Name**: `AUTH_SECRET`
-   - **Value**: `QEOYE+BfhiY6r3iWp3RD7J/Pr1OgPjN8c4/6g1/Gxbg=`
+   - **Value**: generate your own with `openssl rand -base64 32` — never reuse a value
+     that has ever appeared in a committed file or chat log
    - **Environment**: Select **Production**, **Preview**, and **Development** (all three)
 5. Click **Save**
 

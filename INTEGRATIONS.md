@@ -1,4 +1,4 @@
-# Integration Notes
+# Integration Notes (Template)
 
 This file tracks all external services, APIs, and databases integrated into the investment-club project.
 
@@ -23,9 +23,6 @@ This file tracks all external services, APIs, and databases integrated into the 
   ```
   postgresql://postgres.obpkvdbqxxdnqxkxeyfa:[PASSWORD]@db.obpkvdbqxxdnqxkxeyfa.supabase.co:5432/postgres
   ```
-- **Password**: `Alambata15!`
-
-⚠️ **SECURITY NOTE**: Never commit INTEGRATIONS.md to public repositories. This file contains credentials.
 
 ### Environment Variables Required
 - `DATABASE_URL`
@@ -48,8 +45,7 @@ This file tracks all external services, APIs, and databases integrated into the 
 
 ### Environment Variables Required
 - `AUTH_SECRET` - Critical for JWT token signing
-  - Current value: `QEOYE+BfhiY6r3iWp3RD7J/Pr1OgPjN8c4/6g1/Gxbg=`
-  - Generate new with: `openssl rand -base64 32`
+  - Generate with: `openssl rand -base64 32`
 
 ### Seed Admin Credentials
 - **Email**: `admin@example.com`
@@ -64,7 +60,7 @@ This file tracks all external services, APIs, and databases integrated into the 
 ### Vercel
 - **Status**: ✅ Active
 - **Project**: https://vercel.com/hms-projects-e61060e2/investment-club
-- **Production URL**: https://investment-coin-chi.vercel.app
+- **Production URL**: https://investment-club-chi.vercel.app
 - **GitHub**: https://github.com/1DLAMBA/investment-club
 
 ### Environment Variables Required in Vercel

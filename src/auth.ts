@@ -3,8 +3,12 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-// IMPORTANT: AUTH_SECRET is required in production
-const AUTH_SECRET = process.env.AUTH_SECRET || "QEOYE+BfhiY6r3iWp3RD7J/Pr1OgPjN8c4/6g1/Gxbg=";
+if (!process.env.AUTH_SECRET) {
+  throw new Error(
+    "AUTH_SECRET is not set. Generate one with `openssl rand -base64 32` " +
+      "and set it in your environment (never hardcode it in source).",
+  );
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -13,7 +17,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/login",
   },
   trustHost: true,
-  secret: AUTH_SECRET,
   providers: [
     Credentials({
       name: "Credentials",
