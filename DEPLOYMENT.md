@@ -56,32 +56,7 @@
 
 ## Step 3: Run Database Schema and Seed
 
-### Option A: Via Vercel CLI (Recommended)
-
-1. Install Vercel CLI locally if not already installed:
-   ```bash
-   npm i -g vercel
-   ```
-
-2. Login to Vercel:
-   ```bash
-   vercel login
-   ```
-
-3. Pull environment variables:
-   ```bash
-   cd ~/Documents/Projects/investment-club
-   vercel env pull .env
-   ```
-
-4. Push schema and seed:
-   ```bash
-   npm run db:push
-   npm run db:seed
-   npm run db:update-companies
-   ```
-
-### Option B: Via Vercel Web Shell
+### Via Vercel Web Shell (Recommended)
 
 1. Go to your Vercel project
 2. Click **Deployments** tab
@@ -101,6 +76,14 @@
 3. Sign in with the seeded admin credentials:
    - Email: `admin@example.com` (or your SEED_ADMIN_EMAIL)
    - Password: `changeme123` (or your SEED_ADMIN_PASSWORD)
+
+## Architecture
+
+- **Database**: Supabase PostgreSQL (used for all data storage)
+- **Deployment**: Vercel (hosts the Next.js app)
+- **Connection**: Vercel app connects to Supabase via environment variables
+- **Seeding**: Automatic on first login via `/api/seed` endpoint
+- **No Vercel Postgres**: We use Supabase exclusively for database
 
 ## Automatic Deployments
 
@@ -127,6 +110,7 @@ After the initial setup:
 - Make sure all `SEED_ADMIN_*` variables are set
 - Check the deployment logs for errors
 - Try running the seed command via the Vercel web shell
+- The automatic seed endpoint at `/api/seed` will run on first login attempt
 
 ### Build Errors
 - Ensure all dependencies are installed locally (`npm install`)
