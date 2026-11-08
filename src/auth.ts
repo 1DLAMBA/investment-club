@@ -3,9 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-// IMPORTANT: In production, you MUST set AUTH_SECRET environment variable
-// Generate one with: openssl rand -base64 32
-const AUTH_SECRET = process.env.AUTH_SECRET || crypto.randomUUID();
+// IMPORTANT: AUTH_SECRET is required in production
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET environment variable is not set");
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -14,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/login",
   },
   trustHost: true,
-  secret: AUTH_SECRET,
+  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       name: "Credentials",
