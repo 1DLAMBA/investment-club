@@ -3,6 +3,8 @@
 ## Prerequisites
 - GitHub account (already connected)
 - Vercel account (free)
+- Supabase account (free)
+- Supabase project created: `investment-club` (ID: obpkvdbqxxdnqxkxeyfa)
 
 ## Step 1: Deploy to Vercel (Web Interface)
 
@@ -15,25 +17,25 @@
    - **Root Directory**: `./` (leave as default)
 5. Click **Deploy**
 
-## Step 2: Add Vercel Postgres Database
-
-1. After the initial deployment, go to your project's **Storage** tab
-2. Click **Create Database**
-3. Select **Postgres** (powered by Neon)
-4. Choose the **Hobby** plan (free tier)
-5. Click **Create**
-6. Vercel will automatically set `DATABASE_URL` and `DIRECT_URL` environment variables
-
-## Step 3: Add Environment Variables (CRITICAL)
+## Step 2: Add Environment Variables (CRITICAL)
 
 1. Go to your project's **Settings → Environment Variables**
 2. Add the following variables:
 
-   **AUTH_SECRET** (REQUIRED - Authentication will fail without this):
-   ```bash
-   openssl rand -base64 32
+   **DATABASE_URL** (required - Supabase Transaction mode):
    ```
-   Generate this locally and paste the value. This is used by NextAuth.js to sign JWT tokens.
+   postgresql://postgres.obpkvdbqxxdnqxkxeyfa:Alambata15!@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+   ```
+
+   **DIRECT_URL** (required - Supabase Direct connection):
+   ```
+   postgresql://postgres.obpkvdbqxxdnqxkxeyfa:Alambata15!@db.obpkvdbqxxdnqxkxeyfa.supabase.co:5432/postgres
+   ```
+
+   **AUTH_SECRET** (required):
+   ```
+   QEOYE+BfhiY6r3iWp3RD7J/Pr1OgPjN8c4/6g1/Gxbg=
+   ```
 
    **SEED_ADMIN_EMAIL** (optional):
    ```
@@ -52,9 +54,7 @@
 
 3. Click **Save** and then **Redeploy** to apply the variables
 
-⚠️ **IMPORTANT**: You MUST add `AUTH_SECRET` before authentication will work. Without it, you'll get a "Server Action not found" error when trying to log in.
-
-## Step 4: Run Database Schema and Seed
+## Step 3: Run Database Schema and Seed
 
 ### Option A: Via Vercel CLI (Recommended)
 
@@ -83,7 +83,7 @@
 
 ### Option B: Via Vercel Web Shell
 
-1. Go to your project on Vercel
+1. Go to your Vercel project
 2. Click **Deployments** tab
 3. Click the three dots next to the latest deployment
 4. Select **Open Shell**
@@ -94,7 +94,7 @@
    npm run db:update-companies
    ```
 
-## Step 5: Verify Deployment
+## Step 4: Verify Deployment
 
 1. Visit your deployed URL (e.g., `https://investment-club.vercel.app`)
 2. Navigate to `/login`
@@ -111,7 +111,7 @@ After the initial setup:
 
 ## Important Notes
 
-- **Postgres Database**: The free tier (Hobby) includes 512MB storage and 60 hours of compute per month
+- **Supabase Database**: Free tier includes 500MB storage with persistent connections (doesn't auto-pause like Vercel Postgres)
 - **Seeding**: The seed script is idempotent - running it multiple times won't create duplicate data
 - **Environment Variables**: Never commit `.env` to git (it's already in `.gitignore`)
 - **Authentication**: Make sure to set a strong `AUTH_SECRET` in production
@@ -119,9 +119,9 @@ After the initial setup:
 ## Troubleshooting
 
 ### Database Connection Errors
-- Ensure Vercel Postgres is properly linked
-- Check that `DATABASE_URL` and `DIRECT_URL` are set in environment variables
-- Verify the database is not paused (Vercel Postgres auto-pauses after inactivity)
+- Ensure `DATABASE_URL` and `DIRECT_URL` are set in environment variables
+- Verify the Supabase project is active (https://supabase.com/dashboard/project/obpkvdbqxxdnqxkxeyfa)
+- Check that the database is not paused
 
 ### Seed Not Working
 - Make sure all `SEED_ADMIN_*` variables are set
