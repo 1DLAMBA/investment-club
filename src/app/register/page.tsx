@@ -49,9 +49,11 @@ export default function RegisterPage() {
         setError("Registration succeeded but login failed. Please try logging in.");
         setIsLoading(false);
       } else {
-        window.location.href = "/dashboard";
+        // New accounts are always investors, but route through "/" for
+        // consistency with the login page's role-based redirect.
+        window.location.href = "/";
       }
-    } catch (err: any) {
+    } catch {
       setError("An error occurred. Please try again.");
       setIsLoading(false);
     }

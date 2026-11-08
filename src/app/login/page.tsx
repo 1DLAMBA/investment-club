@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { TextField } from "@/components/Field";
 import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -33,10 +31,12 @@ export default function LoginPage() {
         setError("Invalid email or password.");
         setIsLoading(false);
       } else {
-        // Success - redirect to dashboard (middleware will handle role routing)
-        window.location.href = "/dashboard";
+        // Redirect to "/" so the middleware can route by role (admin vs
+        // investor) — going straight to "/dashboard" would land admins on
+        // the investor view, since the middleware only role-routes "/".
+        window.location.href = "/";
       }
-    } catch (err: any) {
+    } catch {
       setError("Invalid email or password.");
       setIsLoading(false);
     }
