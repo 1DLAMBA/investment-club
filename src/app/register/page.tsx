@@ -39,20 +39,12 @@ export default function RegisterPage() {
         return;
       }
 
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        callbackUrl: "/",
       });
-
-      setIsLoading(false);
-
-      if (result?.error) {
-        setError("Registration successful but login failed. Please try logging in.");
-      } else {
-        window.location.href = "/dashboard";
-      }
-    } catch (err) {
+    } catch (err: any) {
       setError("An error occurred. Please try again.");
       setIsLoading(false);
     }

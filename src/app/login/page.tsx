@@ -21,20 +21,13 @@ export default function LoginPage() {
       // Ensure seed data exists before login
       await fetch("/api/seed", { method: "POST" });
 
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        callbackUrl: "/",
       });
-
-      if (result?.error) {
-        setError("Invalid email or password.");
-      } else {
-        window.location.href = "/dashboard";
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
+    } catch (err: any) {
+      setError("Invalid email or password.");
       setIsLoading(false);
     }
   }

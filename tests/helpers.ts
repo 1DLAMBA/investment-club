@@ -12,7 +12,8 @@ export async function loginAs(page: Page, email: string, password: string) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL(/\/(dashboard|admin)/);
+  // Wait for navigation to complete (client-side redirect)
+  await page.waitForNavigation({ url: /\/(dashboard|admin)/ });
 }
 
 export async function registerInvestor(
@@ -24,11 +25,12 @@ export async function registerInvestor(
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /create account/i }).click();
-  await page.waitForURL("**/dashboard");
+  // Wait for navigation to complete (client-side redirect)
+  await page.waitForNavigation({ url: /\/dashboard/ });
   await expect(page.getByText("Wallet balance")).toBeVisible();
 }
 
 export async function logout(page: Page) {
   await page.getByRole("button", { name: /sign out/i }).click();
-  await page.waitForURL(/\/(login|register)/);
+  await page.waitForNavigation({ url: /\/(login|register)/ });
 }

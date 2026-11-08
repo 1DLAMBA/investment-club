@@ -13,6 +13,7 @@ export default auth((req) => {
     nextUrl.pathname.startsWith("/dashboard") ||
     nextUrl.pathname.startsWith("/companies") ||
     isAdminRoute;
+  const isRoot = nextUrl.pathname === "/";
 
   if (isAuthRoute) {
     if (isLoggedIn) {
@@ -21,6 +22,15 @@ export default auth((req) => {
       );
     }
     return NextResponse.next();
+  }
+
+  if (isRoot) {
+    if (isLoggedIn) {
+      return NextResponse.redirect(
+        new URL(role === "ADMIN" ? "/admin" : "/dashboard", nextUrl)
+      );
+    }
+    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   if (isProtectedRoute && !isLoggedIn) {

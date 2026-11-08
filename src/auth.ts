@@ -3,12 +3,16 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-// Fallback AUTH_SECRET for development
-const AUTH_SECRET = process.env.AUTH_SECRET || "dev-secret-do-not-use-in-production";
+// IMPORTANT: In production, you MUST set AUTH_SECRET environment variable
+// Generate one with: openssl rand -base64 32
+const AUTH_SECRET = process.env.AUTH_SECRET || crypto.randomUUID();
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
   trustHost: true,
   secret: AUTH_SECRET,
   providers: [
@@ -55,6 +59,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     authorized: async ({ auth }) => {
       return !!auth;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allow relative URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allow callbackUrl
+      if (url.startsWith(baseUrl)) return url;
+      // Default to dashboard
+      return `${baseUrl}/dashboard`;
     },
   },
 });
