@@ -7,6 +7,7 @@ import { NavBar } from "@/components/NavBar";
 import { LedgerList } from "@/components/LedgerList";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { BalanceHistoryChart, type BalancePoint } from "@/components/BalanceHistoryChart";
 
 function currentValueOf(investedAmount: Prisma.Decimal, company: {
   initialValue: Prisma.Decimal;
@@ -21,24 +22,36 @@ export default async function DashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [user, balance, companies, transactions, investments] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId } }),
-    getWalletBalance(userId),
-    prisma.company.findMany({
-      where: { status: "OPEN" },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.walletTransaction.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    }),
-    prisma.investment.findMany({
-      where: { userId },
-      include: { company: true },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const [user, balance, companies, transactions, investments, ledgerHistory] =
+    await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      getWalletBalance(userId),
+      prisma.company.findMany({
+        where: { status: "OPEN" },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.walletTransaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }),
+      prisma.investment.findMany({
+        where: { userId },
+        include: { company: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.walletTransaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+        select: { amount: true, createdAt: true },
+      }),
+    ]);
+
+  const balancePoints = ledgerHistory.reduce<BalancePoint[]>((acc, tx) => {
+    const running = (acc.length > 0 ? acc[acc.length - 1].balance : 0) + tx.amount.toNumber();
+    acc.push({ t: tx.createdAt.getTime(), balance: running });
+    return acc;
+  }, []);
 
   const totalInvested = investments.reduce(
     (sum, inv) => sum.plus(inv.amount),
@@ -78,9 +91,21 @@ export default async function DashboardPage() {
                 <p className="truncate font-display text-base font-medium text-ink">
                   {session!.user.name}
                 </p>
-                <p className="text-xs text-stone">Investment account</p>
+                <p className="text-xs text-stone">
+                  Investment account
+                  {user?.createdAt &&
+                    ` · member since ${user.createdAt.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`}
+                </p>
               </div>
             </div>
+            {allocationSlices.length > 0 && (
+              <p className="shrink-0 text-right text-xs text-stone">
+                <span className="font-mono text-sm font-medium text-ink">
+                  {allocationSlices.length}
+                </span>{" "}
+                {allocationSlices.length === 1 ? "holding" : "holdings"}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -106,6 +131,12 @@ export default async function DashboardPage() {
             Balances are set by an admin after funds are received outside the
             platform.
           </p>
+
+          {balancePoints.length >= 2 && (
+            <div className="mt-6 border-t border-ink/10 pt-5">
+              <BalanceHistoryChart points={balancePoints} />
+            </div>
+          )}
 
           {allocationSlices.length > 0 && (
             <div className="mt-6 border-t border-ink/10 pt-5">
